@@ -1,0 +1,169 @@
+inherit(lib::cross);
+inherit(lib::konst);
+inherit(require("common"));
+
+JUMP_VELOCITY: 26;
+GRAVITY: 0.6;
+
+SCREEN_WIDTH: 1920;
+SCREEN_HEIGHT: 1080;
+
+fun clamp(num, min, max)
+{
+    return math::min(max, math::max(min, num));
+}
+
+class Player
+{
+    _mc;
+    public _vel: 0;
+    public _x: 960;
+    public _y: 540;
+    public _w: 128;
+    public _h: 128;
+
+    initialize(mc)
+    {
+        _mc = mc;
+    }
+
+    update()
+    {
+        _vel = clamp(_vel + GRAVITY, -10, 10);
+        _y += _vel;
+
+        rot: _vel;
+        rot -= 2;
+        rot *= 9;
+        rot = clamp(rot, -15, 90);
+
+        // _mc.set_rotation(rot);
+        _mc.set_x(_x);
+        _mc.set_y(_y);
+    }
+
+    intersects(pipe)
+    {
+        return (
+            (pipe.x - pipe.w/2 < _x + _w/2)
+            &&
+            (
+                (_y + _h/2 > SCREEN_HEIGHT-pipe.height)
+                ||
+                (_y - _h/2 < pipe.height)
+            )
+        );
+    }
+}
+
+class Pipe
+{
+    _top_mc;
+    _bot_mc;
+    public _height;
+    public _x;
+    public _w: 128;
+    public _h: 640;
+
+    initialize(top_mc, bot_mc, x)
+    {
+        _top_mc = top_mc;
+        _bot_mc = bot_mc;
+
+        _top_mc.set_rotation(180);
+
+        _height = math::random_range(-120, 320);
+        _x = x;
+    }
+
+    update()
+    {
+        if (_x-_w/21 < 0)
+        {
+            _x = (SCREEN_WIDTH + math::random_range(350, 550));
+        }
+
+        _top_mc.set_x(_x);
+        _bot_mc.set_x(_x);
+        _top_mc.set_y(-_height/2);
+        _bot_mc.set_y(SCREEN_HEIGHT - _height/2);
+    }
+}
+
+return fiber
+{
+    lumen: menu.create_lumen0("ui/lumen/ws_select_map");
+    // lumen: menu.create_lumen0_default();
+    lumen.start_in();
+
+    game_running: false;
+    quitting: false;
+
+    // SCREEN_WIDTH = menu.get_screen_width();
+    // SCREEN_HEIGHT = menu.get_screen_height();
+
+    player: Player(lumen.get_mc("player_mc"));
+    num_pipes: 5;
+    pipes: [];
+
+    x: SCREEN_WIDTH;
+    for (i : 0; i < num_pipes; i++)
+    {
+        x += math::random_range(350, 550);
+
+        top_mc: lumen.get_mc(%f"pipes_mc.t%d"(i));
+        bot_mc: lumen.get_mc(%f"pipes_mc.b%d"(i));
+
+        pipes.push_back(Pipe(top_mc, bot_mc, x));
+    }
+
+    while (!quitting)
+    {
+        if (menu.is_pressed(MENU_BUTTON_DECIDE))
+        {
+            if (game_running)
+            {
+                player.vel = -JUMP_VELOCITY;
+            }
+            else
+            {
+                game_running = true;
+                player.y = SCREEN_HEIGHT/2;
+                player.vel = 0;
+            }
+        }
+
+        if (menu.is_pressed(MENU_BUTTON_CANCEL))
+        {
+            if (game_running)
+                game_running = false;
+            else
+                quitting = true;
+        }
+
+        if (game_running)
+        {
+            player.update();
+
+            if (player.y + player.h/2 > SCREEN_HEIGHT)
+            {
+                game_running = false;
+            }
+
+            pipes { |pipe|
+                pipe.x -= 5;
+                pipe.update();
+
+                if (player.intersects(pipe))
+                {
+                    game_running = false;
+                }
+            }
+        }
+
+        yield;
+    }
+
+    menu.play_se("se_sys_cancel");
+    menu.set_value("ws_end_scene", 1);
+}

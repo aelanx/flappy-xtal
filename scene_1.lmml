@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<Lumen width="1920" height="1080" framerate="60">
+    <Shape id="player_shape">
+        <Quad texture="img/yellowbird-midflap.png" />
+    </Shape>
+
+    <Shape id="pipe_shape">
+        <Quad texture="img/pipe-green.png" />
+    </Shape>
+
+    <Sprite id="pipe_mc">
+        <Frame>
+            <PlaceObject id="pipe_shape" depth="0" />
+        </Frame>
+    </Sprite>
+
+    <Sprite id="player_mc">
+        <Frame>
+            <PlaceObject id="player_shape" depth="0" />
+        </Frame>
+    </Sprite>
+
+    <Sprite id="pipes_mc">
+        <Frame>
+            <PlaceObject name="t0" id="pipe_mc" depth="0" />
+            <PlaceObject name="t1" id="pipe_mc" depth="1" />
+            <PlaceObject name="t2" id="pipe_mc" depth="2" />
+            <PlaceObject name="t3" id="pipe_mc" depth="3" />
+            <PlaceObject name="t4" id="pipe_mc" depth="4" />
+            <PlaceObject name="t5" id="pipe_mc" depth="5" />
+            <PlaceObject name="t6" id="pipe_mc" depth="6" />
+            <PlaceObject name="t7" id="pipe_mc" depth="7" />
+            <PlaceObject name="b0" id="pipe_mc" depth="8" />
+            <PlaceObject name="b1" id="pipe_mc" depth="9" />
+            <PlaceObject name="b2" id="pipe_mc" depth="10" />
+            <PlaceObject name="b3" id="pipe_mc" depth="11" />
+            <PlaceObject name="b4" id="pipe_mc" depth="12" />
+            <PlaceObject name="b5" id="pipe_mc" depth="13" />
+            <PlaceObject name="b6" id="pipe_mc" depth="14" />
+            <PlaceObject name="b7" id="pipe_mc" depth="15" />
+        </Frame>
+    </Sprite>
+
+    <Sprite id="root_mc">
+        <Frame>
+            <PlaceObject id="pipes_mc"  depth="0" />
+
+            <PlaceObject id="player_mc" depth="1">
+                <Transform x="960" y="540" />
+            </PlaceObject>
+        </Frame>
+    </Sprite>
+</Lumen>

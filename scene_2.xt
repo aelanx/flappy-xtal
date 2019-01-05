@@ -1,0 +1,86 @@
+inherit(lib::cross);
+inherit(lib::konst);
+inherit(require("common"));
+
+
+model_maker: create_model_maker();
+light_manager: create_light();
+camera_manager: create_camera();
+
+camera_distance: 250;
+camera_distance_increment: 1.5;
+
+player_velocity: 0;
+player_height: 0;
+
+fun process()
+{
+    if (camera_manager)
+        camera_manager.process();
+    if (model_maker)
+        model_maker.process();
+    if (light_manager)
+        light_manager.process();
+}
+
+fun render()
+{
+    if (model_maker)
+        model_maker.render();
+}
+
+fun update_camera()
+{
+    camera_manager.look_at(
+        Vector3(0, 0, camera_distance), // eye
+        Vector3(0, 0, 0), // center
+        Vector3(0, 1, 0) // up
+    );
+}
+
+fighter: model_maker.create_fighter(Resource("fighter/dedede/model/body/c00"));
+// figher.load_motion(Resource("fighter/dedede/motion/body"));
+
+light_manager.load_scene_file(Resource("ui/render/figure/1/"));
+camera_manager.set_projection_param(1, 5, 10000);
+update_camera();
+
+return fiber
+{
+    while (true) {
+        camera_distance += (menu.get_stick_r_y() * camera_distance_increment);
+
+        fighter.set_rotate_y(math::PI/2);
+
+        player_velocity += -1;
+        player_height += player_velocity;
+        player_velocity *= 0.9;
+
+        if (player_height < 0 ) {
+            player_velocity = 0;
+            player_height = 0;
+        }
+
+        fighter.set_translate(Vector3(0, player_height-18, 0));
+
+        update_camera();
+        process();
+        render();
+
+        if (menu.is_pressed(MENU_BUTTON_DECIDE))
+        {
+            menu.play_se("se_sys_decide");
+            player_velocity += 16;
+        }
+
+        if (menu.is_pressed(MENU_BUTTON_CANCEL)) {
+            menu.play_se("se_sys_cancel");
+            menu.set_result(SCENE_RESULT_CANCEL);
+            menu.set_value("ws_end_scene", 1);
+            break;
+
+        }
+
+        yield;
+    }
+}
